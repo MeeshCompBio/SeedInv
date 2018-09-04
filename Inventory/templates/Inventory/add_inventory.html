@@ -1,0 +1,53 @@
+{% extends 'Inventory/base.html' %}
+
+{% block content %}
+
+
+
+        <div class="col-md-12">
+            <div class="col-md-4">
+            <h4>
+                To update the current inventory, please add a file decription and 
+                select  the file you want to upload. If you are unsure of the format, 
+                 please click on this 
+                <a href="{{ MEDIA_URL }}/templates/addition.csv" download> template file</a>
+                to see what the input should look like. The description, file, and timestap will all be stored in a DB upon
+                submission.
+            </h4>
+        </div>
+
+
+            <form enctype="multipart/form-data" method="POST">
+            {% csrf_token %}
+            {{ GenotypesUploadForm.errors}}
+            <div class="col-md-6">
+            {{ GenotypesUploadForm.description}}
+            </div>
+            <br>
+            <div class="col-md-6">
+            {{ GenotypesUploadForm.document}}
+            </div>
+            <br>
+            <div class="col-md-6">
+            <button type="submit" class="btn btn-default">Upload</button>
+            </div>
+            </form>
+
+
+        <div class="col-md-12">
+        <h1>
+            Current inventory
+        </h1>
+            {% load render_table from django_tables2 %}
+            {% load bootstrap3 %}
+
+            {% if filter %}
+                <form action="" method="get" class="form form-inline">
+                    {% bootstrap_form filter.form layout='inline' %}
+                    {% bootstrap_button 'filter' %}
+                </form>
+            {% endif %}
+            {% render_table table 'django_tables2/bootstrap.html' %}
+        </div>
+    </div>
+{% endblock %}

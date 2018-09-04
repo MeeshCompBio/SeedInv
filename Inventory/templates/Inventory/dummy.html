@@ -1,0 +1,25 @@
+{% extends 'Inventory/base.html' %}
+
+{% block content %}
+<h1>File Uploader</h1>
+
+<h3><a href="{{ MEDIA_URL }}/files/test.pl" download> Template file</a></h3>
+
+
+<form enctype="multipart/form-data" method="POST">
+{% csrf_token %}
+{{ form}}
+<input type="submit" value="Upload"/>
+</form>
+
+    {% for allfile in allfiles %}
+        <div>
+            <p>
+                <a href="{{ MEDIA_URL }}{{ allfile.filepath }}">{{ allfile.name }}
+            </p>
+        </div>
+    {% endfor %}
+
+</p>
+
+{% endblock %}

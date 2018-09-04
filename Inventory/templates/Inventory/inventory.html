@@ -1,0 +1,26 @@
+
+{% extends 'Inventory/base.html' %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="page-header">
+            <h1><a href="/">Seed inventory</a></h1>
+            <a href="{% url 'question_new' %}" class="top-menu"><span class="glyphicon glyphicon-plus"></span> Add a question</a>
+        </div>
+    </div>
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-8">
+                {% for question in questions %}
+                    <div>
+                        <p> {{question.pub_date}} </p>
+                        <h1><a href="">{{ question.question_text }}</a></h1>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+
+
+{% endblock %}
