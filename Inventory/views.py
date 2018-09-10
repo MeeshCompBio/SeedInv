@@ -11,6 +11,7 @@ from django.conf import settings
 from .filters import GenoFilter
 from django_filters.views import FilterView
 from django_tables2.views import SingleTableView
+from django_tables2.export.export import TableExport
 
 
 # Create your views here.
@@ -51,7 +52,7 @@ def gtable(request):
     queryset = Genotypes.objects.all()
     f = GenoFilter(request.GET, queryset=queryset)
     table = GenotypesTable(f.qs)
-    RequestConfig(request).configure(table)
+    RequestConfig(request, paginate={'per_page': 25}).configure(table)
 
     form = GenotypesUploadForm(request.POST or None, request.FILES or None)
     if form.is_valid():
@@ -66,11 +67,11 @@ def gtable(request):
                 continue
             else:
                 fields = line.split(",")
-                print(fields)
-                if fields[6] == "TRUE":
+                if (fields[6].startswith("T")) or (fields[6].startswith("t")):
                     fields[6] = True
-                elif fields[6] == "FALSE":
+                else:
                     fields[6] = False
+
                 NewGeno = Genotypes(parent_f_row=fields[0],
                                     parent_m_row=fields[1],
                                     parent_f_geno=fields[2],
@@ -82,26 +83,20 @@ def gtable(request):
                                     tissue_comments=fields[8],
                                     )
                 NewGeno.save()
-        # print(data)
-        # print(data)
-        # for line in data:
-        #     print(line)
 
         form.save()
-        # print(form)
-        # media_url = settings.MEDIA_URL
-        # path_to_file = media_url + "/" + GenotypesUploadForm.document
-        # file = open(path_to_file, "r")
-        # for line in file:
-        #     print(line)
+
         # This will clear out our form upon submission
         form = GenotypesUploadForm()
         # This will refresh the page so people don't double post
         return HttpResponseRedirect('/add_inventory')
 
-    return render(request, 'Inventory/add_inventory.html', {'table': table,
-                                                    'filter': f,
-                                                   'GenotypesUploadForm': GenotypesUploadForm})
+    return render(request, 'Inventory/add_inventory.html',
+                           {
+                            'table': table,
+                            'filter': f,
+                            'GenotypesUploadForm': GenotypesUploadForm
+                            })
 
 
 def upload(request):
@@ -112,8 +107,30 @@ def showfile(request):
     allfiles = GenotypeUploads.objects.all()
     table = UploadRecords(allfiles)
     RequestConfig(request).configure(table)
+
     return render(request, 'Inventory/records.html',
-                  {'allfiles': allfiles, 'table': table})
+                  {
+                   'allfiles': allfiles,
+                   'table': table
+                   })
+
+
+def InventoryTable(request):
+    queryset = Genotypes.objects.all()
+    f = GenoFilter(request.GET, queryset=queryset)
+    table = GenotypesTable(f.qs)
+    RequestConfig(request, paginate={'per_page': 25}).configure(table)
+
+    export_format = request.GET.get('_export', None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table)
+        return exporter.response('table.{}'.format(export_format))
+
+    return render(request, 'Inventory/index.html',
+                           {
+                            'table': table,
+                            'filter': f,
+                            })
 
 
 # def showfile(request):
