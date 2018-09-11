@@ -1,5 +1,5 @@
 from django import forms
-
+from django.conf import settings
 from .models import Question, Genotypes, File, GenotypeUploads
 
 
@@ -37,7 +37,9 @@ class GenotypesUploadForm(forms.ModelForm):
     class Meta:
         model = GenotypeUploads
         fields = ('description',
-                  'document', )
+                  'document',
+                  'upload_pass',
+                  'upload_fail', )
 
 
 class FileForm(forms.ModelForm):

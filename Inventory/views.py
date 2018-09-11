@@ -11,6 +11,7 @@ from django_filters.views import FilterView
 from django_tables2.views import SingleTableView
 from django_tables2.export.export import TableExport
 from .upload_checks import additions_upload
+from django.conf import settings
 
 
 # Create your views here.
@@ -53,20 +54,28 @@ def gtable(request):
     table = GenotypesTable(f.qs)
     RequestConfig(request, paginate={'per_page': 25}).configure(table)
 
+# Check to see if form is valid, even though we will reinitialize it after
+# getting a set of log files created
     form = GenotypesUploadForm(request.POST or None, request.FILES or None)
     if form.is_valid():
 
         # Grab the file and open it
         data = request.FILES.get('document', None)
         # Go through each line of the file
-        additions_upload(data)
+        log_files = additions_upload(data)
+        # reinitialize the upload form with the parse out temp file names
+        form = GenotypesUploadForm(request.POST or None,request.FILES or None,
+                                   initial={'upload_pass': 'logs/'+log_files[0],
+                                            'upload_fail': 'logs/'+log_files[1],
+                                            })
 
+        print(log_files)
         form.save()
 
         # This will clear out our form upon submission
         form = GenotypesUploadForm()
         # This will refresh the page so people don't double post
-        return HttpResponseRedirect('/add_inventory')
+        return HttpResponseRedirect('/records')
 
     return render(request, 'Inventory/add_inventory.html',
                            {
