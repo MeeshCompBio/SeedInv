@@ -1,17 +1,16 @@
 from django.shortcuts import render
 from .models import Question, Genotypes, GenotypeUploads
 from django.utils import timezone
-from .forms import QuestionForm, FileForm, GenotypesUploadForm
-from django.shortcuts import render
+from .forms import QuestionForm, GenotypesUploadForm
 from django.shortcuts import redirect
 from .tables import GenotypesTable, UploadRecords
 from django_tables2.config import RequestConfig
 from django.http import HttpResponseRedirect
-from django.conf import settings
 from .filters import GenoFilter
 from django_filters.views import FilterView
 from django_tables2.views import SingleTableView
 from django_tables2.export.export import TableExport
+from .upload_checks import additions_upload
 
 
 # Create your views here.
@@ -60,29 +59,7 @@ def gtable(request):
         # Grab the file and open it
         data = request.FILES.get('document', None)
         # Go through each line of the file
-        for line in data:
-            line = line.decode().strip()
-            # check to see if there is header line or skip
-            if line.startswith("parent"):
-                continue
-            else:
-                fields = line.split(",")
-                if (fields[6].startswith("T")) or (fields[6].startswith("t")):
-                    fields[6] = True
-                else:
-                    fields[6] = False
-
-                NewGeno = Genotypes(parent_f_row=fields[0],
-                                    parent_m_row=fields[1],
-                                    parent_f_geno=fields[2],
-                                    parent_m_geno=fields[3],
-                                    genotype=fields[4],
-                                    seed_count=fields[5],
-                                    actual_count=fields[6],
-                                    comments=fields[7],
-                                    tissue_comments=fields[8],
-                                    )
-                NewGeno.save()
+        additions_upload(data)
 
         form.save()
 

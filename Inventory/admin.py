@@ -14,8 +14,8 @@ class Genotype(admin.ModelAdmin):
               'parent_m_geno',
               'seed_count',
               'actual_count',
+              'experiment'
               'comments',
-              'tissue_comments'
               ]
 
 

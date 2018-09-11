@@ -49,12 +49,12 @@ class Genotypes(models.Model):
                                 validators=[],)
     seed_count = models.IntegerField(validators=[], default=0)
     actual_count = models.BooleanField(default=False)
+    experiment = models.CharField(max_length=200,
+                                  validators=[],
+                                  blank=True,)
     comments = models.CharField(max_length=200,
                                 validators=[],
                                 blank=True,)
-    tissue_comments = models.CharField(max_length=200,
-                                       validators=[],
-                                       blank=True,)
 
     def __str__(self):
         return self.genotype
@@ -67,6 +67,9 @@ class GenotypeUploads(models.Model):
     description = models.CharField(max_length=255, blank=True)
     document = models.FileField(upload_to='additions/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.doucument
 
 
 class File(models.Model):

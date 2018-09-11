@@ -21,8 +21,8 @@ class GenotypesForm(forms.ModelForm):
                   'parent_m_geno',
                   'seed_count',
                   'actual_count',
+                  'experiment',
                   'comments',
-                  'tissue_comments'
                   ]
 
 
