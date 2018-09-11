@@ -39,7 +39,9 @@ class GenotypesUploadForm(forms.ModelForm):
         fields = ('description',
                   'document',
                   'upload_pass',
-                  'upload_fail', )
+                  'upload_fail',
+                  'issues',
+                  )
 
 
 class FileForm(forms.ModelForm):

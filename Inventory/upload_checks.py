@@ -17,6 +17,7 @@ def additions_upload(data):
                                             dir=settings.MEDIA_ROOT+'/logs',
                                             mode='w',
                                             delete=False)
+    issues = 0
 
     for line in data:
         line = line.decode().strip()
@@ -33,14 +34,19 @@ def additions_upload(data):
                 fields[6] = False
 
             try:
-                QueryGeno = Genotypes.objects.get(parent_f_row=fields[0],
-                                                  parent_m_row=fields[1],
+                QueryGeno = Genotypes.objects.get(parent_f_row__iexact=fields[0],
+                                                  parent_m_row__iexact=fields[1],
                                                   )
+                QueryGeno.seed_count += int(fields[5])
+                QueryGeno.save()
+                # issues += 1
                 # print(QueryGeno.parent_f_row,
                 #       ' ',
                 #       QueryGeno.parent_m_row,
                 #       'alread exists',)
-                fail_file.write(line)
+                res = ("Added " + fields[5]+" seeds to DB")
+                print(line, res, file=pass_file, sep='\t')
+
 
                 # QueryGeno.seed_count += fields[5]
 
@@ -60,7 +66,5 @@ def additions_upload(data):
     fail_file_name = fail_file.name.split("/")[-1]
     fail_file.close()
     pass_file.close()
-    print(pass_file_name)
 
-    return(pass_file_name, fail_file_name)
-
+    return(pass_file_name, fail_file_name, issues)

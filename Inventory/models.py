@@ -68,9 +68,9 @@ class GenotypeUploads(models.Model):
     description = models.CharField(max_length=255, blank=True)
     document = models.FileField(upload_to='additions/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    upload_pass = models.FileField(upload_to='logs/', blank=True,)
+    upload_pass = models.FileField(upload_to='logs/', blank=True)
     upload_fail = models.FileField(upload_to='logs/', blank=True,)
-    issues = models.BooleanField(default=True)
+    issues = models.IntegerField(default=0, blank=True)
 
     def __str__(self):
         return self.doucument

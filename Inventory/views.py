@@ -63,13 +63,14 @@ def gtable(request):
         data = request.FILES.get('document', None)
         # Go through each line of the file
         log_files = additions_upload(data)
+
         # reinitialize the upload form with the parse out temp file names
         form = GenotypesUploadForm(request.POST or None,request.FILES or None,
                                    initial={'upload_pass': 'logs/'+log_files[0],
                                             'upload_fail': 'logs/'+log_files[1],
                                             })
-
-        print(log_files)
+        form = form.save(commit=False)
+        form.issues = log_files[2]
         form.save()
 
         # This will clear out our form upon submission
