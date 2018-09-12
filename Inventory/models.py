@@ -52,7 +52,7 @@ class Genotypes(models.Model):
     experiment = models.CharField(max_length=200,
                                   validators=[],
                                   blank=True,)
-    comments = models.CharField(max_length=200,
+    comments = models.CharField(max_length=300,
                                 validators=[],
                                 blank=True,
                                 )

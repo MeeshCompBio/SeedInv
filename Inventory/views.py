@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 from .tables import GenotypesTable, UploadRecords
 from django_tables2.config import RequestConfig
 from django.http import HttpResponseRedirect
-from .filters import GenoFilter
+from .filters import GenoFilter, GenoUploadsFilter
 from django_filters.views import FilterView
 from django_tables2.views import SingleTableView
 from django_tables2.export.export import TableExport
@@ -48,10 +48,10 @@ def inventory_list(request):
                   {'genotypes': genotypes})
 
 
-def gtable(request):
-    queryset = Genotypes.objects.all()
-    f = GenoFilter(request.GET, queryset=queryset)
-    table = GenotypesTable(f.qs)
+def add_inventory(request):
+    queryset = GenotypeUploads.objects.all()
+    f = GenoUploadsFilter(request.GET, queryset=queryset)
+    table = UploadRecords(f.qs, order_by="-uploaded_at")
     RequestConfig(request, paginate={'per_page': 25}).configure(table)
 
 # Check to see if form is valid, even though we will reinitialize it after
@@ -65,10 +65,13 @@ def gtable(request):
         log_files = additions_upload(data)
 
         # reinitialize the upload form with the parse out temp file names
-        form = GenotypesUploadForm(request.POST or None,request.FILES or None,
-                                   initial={'upload_pass': 'logs/'+log_files[0],
-                                            'upload_fail': 'logs/'+log_files[1],
+        form = GenotypesUploadForm(request.POST or None,
+                                   request.FILES or None,
+                                   initial={
+                                           'upload_pass': 'logs/'+log_files[0],
+                                           'upload_fail': 'logs/'+log_files[1],
                                             })
+        # fake save to initialize num issues only to replace with log_file val
         form = form.save(commit=False)
         form.issues = log_files[2]
         form.save()
@@ -76,7 +79,7 @@ def gtable(request):
         # This will clear out our form upon submission
         form = GenotypesUploadForm()
         # This will refresh the page so people don't double post
-        return HttpResponseRedirect('/records')
+        return HttpResponseRedirect('/add_inventory.html')
 
     return render(request, 'Inventory/add_inventory.html',
                            {
@@ -92,7 +95,7 @@ def upload(request):
 
 def showfile(request):
     allfiles = GenotypeUploads.objects.all()
-    table = UploadRecords(allfiles)
+    table = UploadRecords(allfiles, order_by="-uploaded_at")
     RequestConfig(request).configure(table)
 
     return render(request, 'Inventory/records.html',
