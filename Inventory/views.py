@@ -1,16 +1,16 @@
 from django.shortcuts import render
-from .models import Question, Genotypes, GenotypeUploads
+from .models import Question, Genotypes, GenotypeUploads, GenotypeDownloads
 from django.utils import timezone
-from .forms import QuestionForm, GenotypesUploadForm
+from .forms import QuestionForm, GenotypesUploadForm, GenotypesDownloadForm
 from django.shortcuts import redirect
-from .tables import GenotypesTable, UploadRecords
+from .tables import GenotypesTable, UploadRecords, DownloadRecords
 from django_tables2.config import RequestConfig
 from django.http import HttpResponseRedirect
-from .filters import GenoFilter, GenoUploadsFilter
+from .filters import GenoFilter, GenoUploadsFilter, GenoDownloadsFilter
 from django_filters.views import FilterView
 from django_tables2.views import SingleTableView
 from django_tables2.export.export import TableExport
-from .upload_checks import additions_upload
+from .upload_checks import additions_upload, subtractions_download
 from django.conf import settings
 
 
@@ -86,6 +86,49 @@ def add_inventory(request):
                             'table': table,
                             'filter': f,
                             'GenotypesUploadForm': GenotypesUploadForm
+                            })
+
+
+def withdraw_inventory(request):
+    queryset = GenotypeDownloads.objects.all()
+    f = GenoDownloadsFilter(request.GET, queryset=queryset)
+    table = DownloadRecords(f.qs, order_by="-uploaded_at")
+    RequestConfig(request, paginate={'per_page': 25}).configure(table)
+
+# Check to see if form is valid, even though we will reinitialize it after
+# getting a set of log files created
+    form = GenotypesDownloadForm(request.POST or None, request.FILES or None)
+    if form.is_valid():
+
+        # Grab the file and open it
+        data = request.FILES.get('document', None)
+        # Go through each line of the file
+        log_files = subtractions_download(data)
+
+        # reinitialize the Download form with the parse out temp file names
+        form = GenotypesDownloadForm(
+                                 request.POST or None,
+                                 request.FILES or None,
+                                 initial={
+                                         'download_pass': 'logs/'+log_files[0],
+                                         'download_fail': 'logs/'+log_files[1],
+                                    })
+
+        # fake save to initialize num issues only to replace with log_file val
+        form = form.save(commit=False)
+        form.issues = log_files[2]
+        form.save()
+
+        # This will clear out our form upon submission
+        form = GenotypesDownloadForm()
+        # This will refresh the page so people don't double post
+        return HttpResponseRedirect('withdraw_inventory.html')
+
+    return render(request, 'Inventory/withdraw_inventory.html',
+                           {
+                            'table': table,
+                            'filter': f,
+                            'GenotypesDownloadForm': GenotypesDownloadForm
                             })
 
 

@@ -1,6 +1,6 @@
 import django_filters
 
-from Inventory.models import Genotypes, GenotypeUploads
+from Inventory.models import Genotypes, GenotypeUploads, GenotypeDownloads
 
 
 class GenoFilter(django_filters.FilterSet):
@@ -19,4 +19,11 @@ class GenoUploadsFilter(django_filters.FilterSet):
 
     class Meta:
         model = GenotypeUploads
+        fields = {'description': ['icontains']}
+
+
+class GenoDownloadsFilter(django_filters.FilterSet):
+
+    class Meta:
+        model = GenotypeDownloads
         fields = {'description': ['icontains']}

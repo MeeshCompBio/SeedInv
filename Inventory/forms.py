@@ -1,6 +1,6 @@
 from django import forms
 from django.conf import settings
-from .models import Question, Genotypes, File, GenotypeUploads
+from .models import Question, Genotypes, File, GenotypeUploads, GenotypeDownloads
 
 
 class QuestionForm(forms.ModelForm):
@@ -40,6 +40,24 @@ class GenotypesUploadForm(forms.ModelForm):
                   'document',
                   'upload_pass',
                   'upload_fail',
+                  'issues',
+                  )
+
+
+class GenotypesDownloadForm(forms.ModelForm):
+    description = forms.CharField(widget=forms.TextInput(
+        attrs={
+            'class': 'form-control',
+            'placeholder': 'Insert a decription of the file to be downloaded'
+        }
+        ))
+
+    class Meta:
+        model = GenotypeDownloads
+        fields = ('description',
+                  'document',
+                  'download_pass',
+                  'download_fail',
                   'issues',
                   )
 
