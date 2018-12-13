@@ -8,4 +8,6 @@ urlpatterns = [
     path('withdraw_inventory', views.withdraw_inventory, name='withdraw_inventory'),
     path('records', views.showfile, name='records'),
     path('', views.InventoryTable, name='index'),
+    path('qr_code', views.qr_code, name='qr_code'),
+
 ]

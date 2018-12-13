@@ -88,6 +88,27 @@ class GenotypeDownloads(models.Model):
         return self.doucument
 
 
+class QR_Code(models.Model):
+    """list of current genotypes"""
+    parent_f_row = models.CharField(max_length=200,
+                                    validators=[],)
+    parent_m_row = models.CharField(max_length=200,
+                                    validators=[],)
+    parent_f_geno = models.CharField(max_length=200,
+                                     validators=[],)
+    parent_m_geno = models.CharField(max_length=200,
+                                     validators=[],)
+    genotype = models.CharField(max_length=200,
+                                validators=[],)
+    qr_code = models.CharField(max_length=300,
+                               validators=[],
+                               blank=True,
+                               )
+
+    def __str__(self):
+        return self.qr_code
+
+
 class File(models.Model):
     name = models.CharField(max_length=500)
     filepath = models.FileField(upload_to='files/', null=True, verbose_name="")

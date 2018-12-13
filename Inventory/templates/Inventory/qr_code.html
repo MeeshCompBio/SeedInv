@@ -1,0 +1,16 @@
+{% extends 'Inventory/base.html' %}
+
+{% block content %}
+
+
+{% load qr_code %}
+<table>
+<tr>
+        <th> Code </th>
+</tr>
+<tr>
+
+    <td>{% qr_from_text "Hello World!" size="T" %}</td>
+</tr>
+</table>
+{% endblock %}

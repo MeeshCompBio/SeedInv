@@ -38,7 +38,9 @@ def additions_upload(data):
             fields = line.split("\t")
             if len(fields) != 9:
                 issues += 1
-                info = ('The number of fields for this line is incorrect sure you have nine columns of data and that it is tab seperated')
+                info = ("The number of fields for this line is incorrect " +
+                        "sure you have nine columns of data and that it is " +
+                        "tab seperated")
                 print(line, info, sep='\t', file=fail_file)
                 continue
 
@@ -94,7 +96,7 @@ def additions_upload(data):
     fail_file_name = fail_file.name.split("/")[-1]
     fail_file.close()
     pass_file.close()
-    print (total)
+    print(total)
 
     return(pass_file_name, fail_file_name, issues)
 
@@ -125,7 +127,9 @@ def subtractions_download(data):
             fields = line.split("\t")
             if len(fields) != 9:
                 issues += 1
-                info = ('The number of fields for this line is incorrect sure you have nine columns of data and that it is tab seperated')
+                info = ("The number of fields for this line is incorrect. " +
+                        "sure you have nine columns of data, " +
+                        "and that it is tab seperated")
                 print(line, info, sep='\t', file=fail_file)
                 continue
 
@@ -156,17 +160,32 @@ def subtractions_download(data):
                                                   )
                 QueryGeno.seed_count -= int(fields[5])
                 if QueryGeno.seed_count < 0:
-                    QueryGeno.seed_count = 0
-                    info = ("WARNING: Removed " + fields[5]+" seeds from DB, but returned a negative number. Value set to 0 in DB, but check your seed stocks")
-                    print(line, info, sep='\t', file=pass_file)
+                    issues += 1
+                    info = ("WARNING: " +
+                            fields[5] +
+                            " does not have enough seed. " +
+                            "Stock would have been set at " +
+                            str(QueryGeno.seed_count) +
+                            " seeds from DB, but it is a negative number. " +
+                            "You don't have enough seed, " +
+                            "check your seed stocks")
+                    print(line, info, sep='\t', file=fail_file)
+
                 else:
-                    info = ("Removed " + fields[5]+" seeds from DB")
+                    info = ("Removed " + fields[5]+" seeds from DB they're " +
+                            str(QueryGeno.seed_count) +
+                            "remaining")
                     print(line, info, sep='\t', file=pass_file)
                 QueryGeno.save()
 
             # If the query does not exist, make a new one
             except Genotypes.DoesNotExist:
-                info = ("lines " + fields[0]+' '+fields[1]+" don't exist in DB, please make sure you spelled them correctly")
+                info = ("lines " +
+                        fields[0] +
+                        ' ' +
+                        fields[1] +
+                        " don't exist in DB, please make sure you spelled " +
+                        " them correctly")
                 print(line, info, sep='\t', file=fail_file,)
 
     # take off flie path and just the base name with suffix
@@ -174,6 +193,71 @@ def subtractions_download(data):
     fail_file_name = fail_file.name.split("/")[-1]
     fail_file.close()
     pass_file.close()
-    print (total)
+    print(total)
+
+    return(pass_file_name, fail_file_name, issues)
+
+
+def QR_code_check(data):
+    has_QR_file = tempfile.NamedTemporaryFile(suffix="_log.txt",
+                                              prefix="withdraaw_pass_",
+                                              dir=settings.MEDIA_ROOT+'/logs',
+                                              mode='w',
+                                              delete=False)
+    no_QR_file = tempfile.NamedTemporaryFile(suffix="__log.txt",
+                                             prefix="withdraw_fail_",
+                                             dir=settings.MEDIA_ROOT+'/logs',
+                                             mode='w',
+                                             delete=False)
+    issues = 0
+    total = 0
+    for line in data:
+        total += 1
+        line = line.decode().strip()
+
+        # check to see if there is header line or skip
+        if line.startswith("parent"):
+            continue
+        else:
+            fields = line.split("\t")
+            if len(fields) != 4:
+                issues += 1
+                info = ("The number of fields for this line is incorrect. " +
+                        "sure you have nine columns of data, " +
+                        "and that it is tab seperated")
+                print(line, info, sep='\t', file=no_QR_file)
+                continue
+            try:
+                QueryGeno = Genotypes.objects.get(parent_f_row__iexact=fields[0],
+                                                  parent_m_row__iexact=fields[1],
+                                                  )
+                QueryGeno.seed_count += int(fields[5])
+                QueryGeno.save()
+                info = ("Added " + fields[5]+" seeds to DB")
+                print(line, info, sep='\t', file=has_QR_file)
+
+            # If the query does not exist, make a new one
+            except Genotypes.DoesNotExist:
+                NewGeno = Genotypes(parent_f_row=fields[0],
+                                    parent_m_row=fields[1],
+                                    parent_f_geno=fields[2],
+                                    parent_m_geno=fields[3],
+                                    genotype=fields[4],
+                                    seed_count=fields[5],
+                                    actual_count=fields[6],
+                                    experiment=fields[7],
+                                    comments=fields[8],
+                                    )
+                NewGeno.save()
+
+                info = ("Added " + fields[0]+' '+fields[1]+" harvest to DB")
+                print(line, info, sep='\t', file=has_QR_file,)
+
+    # take off file path and just the base name with suffix
+    pass_file_name = has_QR_file.name.split("/")[-1]
+    fail_file_name = no_QR_file.name.split("/")[-1]
+    no_QR_file.close()
+    has_QR_file.close()
+    print(total)
 
     return(pass_file_name, fail_file_name, issues)

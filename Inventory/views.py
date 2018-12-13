@@ -12,6 +12,8 @@ from django_tables2.views import SingleTableView
 from django_tables2.export.export import TableExport
 from .upload_checks import additions_upload, subtractions_download
 from django.conf import settings
+from django.shortcuts import render
+from qr_code.qrcode.utils import QRCodeOptions
 
 
 # Create your views here.
@@ -79,7 +81,7 @@ def add_inventory(request):
         # This will clear out our form upon submission
         form = GenotypesUploadForm()
         # This will refresh the page so people don't double post
-        return HttpResponseRedirect('/add_inventory.html')
+        return HttpResponseRedirect('/SeedInv')
 
     return render(request, 'Inventory/add_inventory.html',
                            {
@@ -122,7 +124,7 @@ def withdraw_inventory(request):
         # This will clear out our form upon submission
         form = GenotypesDownloadForm()
         # This will refresh the page so people don't double post
-        return HttpResponseRedirect('withdraw_inventory.html')
+        return HttpResponseRedirect('/SeedInv/withdraw_inventory')
 
     return render(request, 'Inventory/withdraw_inventory.html',
                            {
@@ -165,6 +167,15 @@ def InventoryTable(request):
                             'filter': f,
                             })
 
+
+def qr_code(request):
+    # Build context for rendering QR codes.
+    context = dict(
+        my_options=QRCodeOptions(size='t', border=6, error_correction='L'),
+    )
+
+    # Render the view.
+    return render(request, 'Inventory/qr_code.html', context=context)
 
 # def showfile(request):
 #     f = GenoFilter(request.GET, queryset=Genotypes.objects.all())

@@ -12,18 +12,17 @@ class QuestionForm(forms.ModelForm):
 
 class GenotypesForm(forms.ModelForm):
 
-    class Meta:
         model = Genotypes
-        fields = ['genotype',
-                  'parent_f_row',
+        fields = ('parent_f_row',
                   'parent_m_row',
                   'parent_f_geno',
                   'parent_m_geno',
+                  'genotype',
                   'seed_count',
                   'actual_count',
                   'experiment',
                   'comments',
-                  ]
+                  )
 
 
 class GenotypesUploadForm(forms.ModelForm):
