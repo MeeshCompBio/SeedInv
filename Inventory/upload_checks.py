@@ -1,4 +1,4 @@
-from .models import Genotypes
+from .models import Genotypes, QR_Code
 import tempfile
 from django.conf import settings
 
@@ -200,7 +200,7 @@ def subtractions_download(data):
 
 def QR_code_check(data):
     has_QR_file = tempfile.NamedTemporaryFile(suffix="_log.txt",
-                                              prefix="withdraaw_pass_",
+                                              prefix="withdraw_pass_",
                                               dir=settings.MEDIA_ROOT+'/logs',
                                               mode='w',
                                               delete=False)
@@ -220,7 +220,7 @@ def QR_code_check(data):
             continue
         else:
             fields = line.split("\t")
-            if len(fields) != 4:
+            if len(fields) != 7:
                 issues += 1
                 info = ("The number of fields for this line is incorrect. " +
                         "sure you have nine columns of data, " +
@@ -228,30 +228,36 @@ def QR_code_check(data):
                 print(line, info, sep='\t', file=no_QR_file)
                 continue
             try:
-                QueryGeno = Genotypes.objects.get(parent_f_row__iexact=fields[0],
-                                                  parent_m_row__iexact=fields[1],
-                                                  )
-                QueryGeno.seed_count += int(fields[5])
-                QueryGeno.save()
-                info = ("Added " + fields[5]+" seeds to DB")
-                print(line, info, sep='\t', file=has_QR_file)
+                QueryQR = QR_Code.objects.get(parent_f_row__iexact=fields[0],
+                                              parent_m_row__iexact=fields[1],
+                                              )
+                info = ("Barcode already existed for " +
+                        fields[0] +
+                        "_" +
+                        fields[1] +
+                        "combination"
+                        )
+                print(QueryQR, info, sep='\t', file=has_QR_file)
 
             # If the query does not exist, make a new one
-            except Genotypes.DoesNotExist:
-                NewGeno = Genotypes(parent_f_row=fields[0],
-                                    parent_m_row=fields[1],
-                                    parent_f_geno=fields[2],
-                                    parent_m_geno=fields[3],
-                                    genotype=fields[4],
-                                    seed_count=fields[5],
-                                    actual_count=fields[6],
-                                    experiment=fields[7],
-                                    comments=fields[8],
-                                    )
-                NewGeno.save()
+            except QR_Code.DoesNotExist:
+                NewQRcd = QR_Code(parent_f_row=fields[0],
+                                  parent_m_row=fields[1],
+                                  parent_f_geno=fields[2],
+                                  parent_m_geno=fields[3],
+                                  genotype=fields[4],
+                                  plot=fields[5],
+                                  ranges=fields[6],
+                                  qr_code="{% qr_from_text " +
+                                          fields[0] +
+                                          "_" +
+                                          fields[1] +
+                                          " size=\"T\" %}",
+                                  )
+                NewQRcd.save()
 
-                info = ("Added " + fields[0]+' '+fields[1]+" harvest to DB")
-                print(line, info, sep='\t', file=has_QR_file,)
+                info = ("Added " + fields[0]+' '+fields[1]+" QR to DB")
+                print(NewQRcd, info, sep='\t', file=has_QR_file,)
 
     # take off file path and just the base name with suffix
     pass_file_name = has_QR_file.name.split("/")[-1]

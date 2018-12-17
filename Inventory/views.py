@@ -14,7 +14,15 @@ from .upload_checks import additions_upload, subtractions_download
 from django.conf import settings
 from django.shortcuts import render
 from qr_code.qrcode.utils import QRCodeOptions
-
+from django.shortcuts import render
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from django.http import HttpResponse
+from reportlab.graphics.barcode import qr
+from reportlab.graphics.shapes import Drawing
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import mm
+from reportlab.graphics import renderPDF
 
 # Create your views here.
 def post_list(request):
@@ -176,6 +184,71 @@ def qr_code(request):
 
     # Render the view.
     return render(request, 'Inventory/qr_code.html', context=context)
+
+
+def qr_code_result(request):
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="mypdf.pdf"'
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer)
+
+#     # Start writing the PDF here
+#     p.setFont("Helvetica", 10)
+#     p.drawString(110, 790, 'Range')
+#     p.drawString(150, 790, 'Row')
+#     p.drawString(110, 780, 'RowID')
+#     p.drawString(110, 770, 'Entry')
+#     p.drawString(110, 760, 'Source')
+#     # End writing
+#     qr_code = qr.QrCodeWidget('Range_Row_RowID_Enrty_Source')
+#     bounds = qr_code.getBounds()
+#     width = bounds[2] - bounds[0]
+#     height = bounds[3] - bounds[1]
+#     d = Drawing(50, 50, transform=[50./width,0,0,50./height,0,0])
+#     d.add(qr_code)
+#     renderPDF.draw(d, p, 50, 755)
+# ##################################
+#     p.setFont("Helvetica", 10)
+#     p.drawString(110, 740, 'Range')
+#     p.drawString(150, 740, 'Row')
+#     p.drawString(110, 730, 'RowID')
+#     p.drawString(110, 720, 'Entry')
+#     p.drawString(110, 710, 'Source')
+
+    C = 110
+    for j in range(3):
+        H = 790
+        for i in range(15):
+            p.setFont("Helvetica", 10)
+            p.drawString(C, H, 'Range')
+            p.drawString((C+40), H, 'Row')
+            p.drawString(C, (H-10), 'RowID')
+            p.drawString(C, (H-20), 'Entry')
+            p.drawString(C, (H-30), 'Source')
+            # End writing
+            qr_code = qr.QrCodeWidget('Range_Row_RowID_Enrty_Source')
+            bounds = qr_code.getBounds()
+            width = bounds[2] - bounds[0]
+            height = bounds[3] - bounds[1]
+            d = Drawing(50, 50, transform=[50./width,0,0,50./height,0,0])
+            d.add(qr_code)
+            renderPDF.draw(d, p, (C-60), (H-35))
+            H -= 50
+        C+=175
+
+
+
+
+
+    p.showPage()
+    p.save()
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+    return response
 
 # def showfile(request):
 #     f = GenoFilter(request.GET, queryset=Genotypes.objects.all())

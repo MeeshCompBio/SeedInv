@@ -9,5 +9,5 @@ urlpatterns = [
     path('records', views.showfile, name='records'),
     path('', views.InventoryTable, name='index'),
     path('qr_code', views.qr_code, name='qr_code'),
-
+    path('qr_code_results', views.qr_code_result, name='qr_code_results'),
 ]

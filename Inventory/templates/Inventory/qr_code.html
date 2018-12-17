@@ -2,6 +2,34 @@
 
 {% block content %}
 
+        <div class="col-md-12">
+            <div class="col-md-4">
+            <h4>
+                To generate printable QR code ids, please add a file decription and 
+                select the file you want to upload. If you are unsure of the format, 
+                 please click on this 
+                <a href="{{ MEDIA_URL }}/templates/addition.txt" download> template file</a>
+                to see what the input should look like. The description, file, and timestap will all be stored in a DB upon
+                submission.
+            </h4>
+        </div>
+
+
+            <form enctype="multipart/form-data" method="POST">
+            {% csrf_token %}
+            {{ GenotypesUploadForm.errors}}
+            <div class="col-md-6">
+            {{ GenotypesUploadForm.description}}
+            </div>
+            <br>
+            <div class="col-md-6">
+            {{ GenotypesUploadForm.document}}
+            </div>
+            <br>
+            <div class="col-md-6">
+            <button type="submit" class="btn btn-default">Upload</button>
+            </div>
+            </form>
 
 {% load qr_code %}
 <table>
@@ -9,7 +37,10 @@
         <th> Code </th>
 </tr>
 <tr>
-
+<br>
+<br>
+<br>
+<br>
     <td>{% qr_from_text "Hello World!" size="T" %}</td>
 </tr>
 </table>
