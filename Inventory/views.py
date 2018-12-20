@@ -23,6 +23,8 @@ from reportlab.graphics.shapes import Drawing
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import mm
 from reportlab.graphics import renderPDF
+from django.contrib import messages
+
 
 # Create your views here.
 def post_list(request):
@@ -89,7 +91,10 @@ def add_inventory(request):
         # This will clear out our form upon submission
         form = GenotypesUploadForm()
         # This will refresh the page so people don't double post
-        return HttpResponseRedirect('/SeedInv')
+        if int(log_files[2]) == 0:
+            return HttpResponseRedirect('/SeedInv')
+        else:
+            return HttpResponseRedirect('/SeedInv/add_inventory')
 
     return render(request, 'Inventory/add_inventory.html',
                            {
@@ -132,7 +137,10 @@ def withdraw_inventory(request):
         # This will clear out our form upon submission
         form = GenotypesDownloadForm()
         # This will refresh the page so people don't double post
-        return HttpResponseRedirect('/SeedInv/withdraw_inventory')
+        if int(log_files[2]) == 0:
+            return HttpResponseRedirect('/SeedInv')
+        else:
+            return HttpResponseRedirect('/SeedInv/withdraw_inventory')
 
     return render(request, 'Inventory/withdraw_inventory.html',
                            {

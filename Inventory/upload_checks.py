@@ -5,7 +5,7 @@ from django.conf import settings
 
 # This is to start and check if uploads with pass when adding inventory
 def CheckInt(num):
-    try: 
+    try:
         int(num)
         return True
     except ValueError:
@@ -36,11 +36,13 @@ def additions_upload(data):
             continue
         else:
             fields = line.split("\t")
-            if len(fields) != 9:
+            # Allow of comment and experiment to be blank
+            if len(fields) < 7 or len(fields) > 9:
                 issues += 1
                 info = ("The number of fields for this line is incorrect " +
                         "sure you have nine columns of data and that it is " +
-                        "tab seperated")
+                        "tab seperated. You can have 7 columns with " +
+                        "experiment and comments blank")
                 print(line, info, sep='\t', file=fail_file)
                 continue
 
@@ -64,39 +66,44 @@ def additions_upload(data):
             else:
                 fields[6] = False
 
-            # Check if the m and f parent row combo already exists in DB
-            try:
-                QueryGeno = Genotypes.objects.get(parent_f_row__iexact=fields[0],
-                                                  parent_m_row__iexact=fields[1],
-                                                  )
-                QueryGeno.seed_count += int(fields[5])
-                QueryGeno.save()
-                info = ("Added " + fields[5]+" seeds to DB")
-                print(line, info, sep='\t', file=pass_file)
-
-            # If the query does not exist, make a new one
-            except Genotypes.DoesNotExist:
-                NewGeno = Genotypes(parent_f_row=fields[0],
-                                    parent_m_row=fields[1],
-                                    parent_f_geno=fields[2],
-                                    parent_m_geno=fields[3],
-                                    genotype=fields[4],
-                                    seed_count=fields[5],
-                                    actual_count=fields[6],
-                                    experiment=fields[7],
-                                    comments=fields[8],
-                                    )
-                NewGeno.save()
-
-                info = ("Added " + fields[0]+' '+fields[1]+" harvest to DB")
-                print(line, info, sep='\t', file=pass_file,)
-
     # take off flie path and just the base name with suffix
     pass_file_name = pass_file.name.split("/")[-1]
     fail_file_name = fail_file.name.split("/")[-1]
     fail_file.close()
     pass_file.close()
     print(total)
+
+    if issues == 0:
+        # go back through file to add to DB instead of partial adds
+        file = open(pass_file, 'r')
+        for line in file:
+            line = line.decode().strip()
+            if line.startswith("parent"):
+                continue
+            else:
+                fields = line.split("\t")
+                # Check if the m and f parent row combo already exists in DB
+                try:
+                    QueryGeno = Genotypes.objects.get(parent_f_row__iexact=fields[0],
+                                                      parent_m_row__iexact=fields[1],
+                                                      )
+                    QueryGeno.seed_count += int(fields[5])
+                    QueryGeno.save()
+
+                # If the query does not exist, make a new one
+                except Genotypes.DoesNotExist:
+                    NewGeno = Genotypes(parent_f_row=fields[0],
+                                        parent_m_row=fields[1],
+                                        parent_f_geno=fields[2],
+                                        parent_m_geno=fields[3],
+                                        genotype=fields[4],
+                                        seed_count=fields[5],
+                                        actual_count=fields[6],
+                                        experiment=fields[7],
+                                        comments=fields[8],
+                                        )
+                    NewGeno.save()
+        pass_file.close()
 
     return(pass_file_name, fail_file_name, issues)
 
@@ -125,7 +132,7 @@ def subtractions_download(data):
             continue
         else:
             fields = line.split("\t")
-            if len(fields) != 9:
+            if len(fields) >= 7 and len(fields) <= 9:
                 issues += 1
                 info = ("The number of fields for this line is incorrect. " +
                         "sure you have nine columns of data, " +
@@ -176,7 +183,6 @@ def subtractions_download(data):
                             str(QueryGeno.seed_count) +
                             "remaining")
                     print(line, info, sep='\t', file=pass_file)
-                QueryGeno.save()
 
             # If the query does not exist, make a new one
             except Genotypes.DoesNotExist:
@@ -194,6 +200,22 @@ def subtractions_download(data):
     fail_file.close()
     pass_file.close()
     print(total)
+
+    if issues == 0:
+        # go back through file to add to DB instead of partial adds
+        file = open(pass_file, 'r')
+        for line in file:
+            line = line.decode().strip()
+            if line.startswith("parent"):
+                continue
+            else:
+                fields = line.split("\t")
+            QueryGeno = Genotypes.objects.get(parent_f_row__iexact=fields[0],
+                                              parent_m_row__iexact=fields[1],
+                                              )
+            QueryGeno.seed_count -= int(fields[5])
+            QueryGeno.save()
+        pass_file.close()
 
     return(pass_file_name, fail_file_name, issues)
 
